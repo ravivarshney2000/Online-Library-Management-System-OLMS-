@@ -1,0 +1,233 @@
+from datetime import date,timedelta,datetime
+import sqlite3
+try:
+    con=sqlite3.connect('p.db')
+    cur=con.cursor()
+    
+    print("PRESS 1 FOR ISSUE")
+    print("PRESS 2 FOR RETURN")
+    print("PRESS 3 FOR NEW USER")
+    print("PRESS 4 FOR NEW BOOK ")
+    print("PRESS 5 FOR BOOK STOCK")
+    print("PRESS 6 FOR CUSTOMER DETAIL")
+    print("PRESS 7 FOR ALL TARNSACTIONS ")
+    a=int(input())
+    l1=[]
+    l2=[]
+    q5=cur.execute("select cno,cname from customers;")
+    for i in q5:
+            l1.append(i[0])
+            l2.append(i[1])
+    dct1={l1[i]:l2[i] for i in range(len(l1))}
+
+    l3=[]
+    l4=[]
+    q7=cur.execute("select bcode,bname from stock;")
+    for i in q7:
+            l3.append(i[0])
+            l4.append(i[1])
+    dct2={l3[i]:l4[i] for i in range(len(l3))}
+
+    
+
+    if a==1:
+        
+        
+        q="""insert into maintain(cno,bcode,cname,issuedate,e_returndate) values(?,?,?,?,?);"""
+        cno=int(input("Enter the id of a person:-"))
+   
+        cname=''
+        if cno in dct1:
+            cname=dct1[cno]
+            bcode=int(input("Enter the Book Code:-"))
+            if bcode in dct2:
+                q1=cur.execute("select ab from stock where bcode=?;",(bcode,))
+                for i in q1:
+                    if i[0]>0:
+                        cur.execute("update stock set ab=ab-1 where bcode=?;",(bcode,))
+                        issuedate=date.today()
+                        e_returndate=date.today()+timedelta(12)
+                        datatuple=(cno,bcode,cname,issuedate,e_returndate)
+                        cur.execute(q,datatuple)
+                        cur.execute("select * from maintain where  cno=? and bcode=? and cname=? and issuedate=? and e_returndate=?;",(cno,bcode,cname,issuedate,e_returndate))
+                        rows=cur.fetchall()
+                        for row in rows:
+                            print("Customer ID:-",row[0])
+                            print("BOOK CODE:-",row[1])
+                            print("Customer Name:-",row[2])
+                            print("Issue Date:-",row[3])
+                            print("Estimate Return Date:-",row[4])
+                            break
+                        con.commit()
+                    else:
+                        print("NOT SUFFICENT BOOKS")
+           
+            else:
+                print("No such book")
+        else:
+            print("No such user")
+
+            
+
+
+    elif a==2:
+        q="""insert into maintain(cno,bcode,cname,issuedate,e_returndate,r_returndate,fine) values(?,?,?,?,?,?,?);"""
+        cno=int(input("Enter the id of a person:-"))
+        if cno in dct1:
+            cname=dct1[cno]
+            bcode=int(input("Enter the Book Code:-"))
+            if bcode in dct2:
+                q1=cur.execute("select ab from stock where bcode=?;",(bcode,))
+                for i in q1:
+                    cur.execute("update stock set ab=ab+1 where bcode=?;",(bcode,))
+                    q3=cur.execute("select issuedate from maintain where cno=? and bcode=?;",(cno,bcode))
+                    issuedate=""
+                    for i in q3:
+                        issuedate=i[0]
+
+                    q4=cur.execute("select e_returndate from maintain where cno=? and bcode=?;",(cno,bcode))
+                    e_returndate=""
+                    for i in q4:
+                        e_returndate=i[0]
+                        
+                    r_returndate=input('Enter a date in YYYY-MM-DD format:-')
+                    year1,month1,dt1=map(int,r_returndate.split("-"))
+                    f_date=date(year1,month1,dt1)
+                    year2,month2,dt2=map(int,e_returndate.split("-"))
+                    l_date=date(year2,month2,dt2)
+                    d=f_date-l_date
+                    if d.days<=0:
+                        fine=0
+                    else:
+                        fine=d.days*10
+                    datatuple=(cno,bcode,cname,issuedate,e_returndate,r_returndate,fine)
+                    cur.execute(q,datatuple)
+                    cur.execute("select * from maintain where  cno=? and bcode=? and cname=? and issuedate=? and e_returndate=? and r_returndate=? and fine=?;",(cno,bcode,cname,issuedate,e_returndate,r_returndate,fine))
+                    rows=cur.fetchall()
+                    for row in rows:
+                            print("Customer ID:-",row[0])
+                            print("BOOK CODE:-",row[1])
+                            print("Customer Name:-",row[2])
+                            print("Issue Date:-",row[3])
+                            print("Estimate Return Date:-",row[4])
+                            print("Return Date:-",row[5])
+                            print("Fine:-",row[6])
+                            break
+                    con.commit()
+           
+            else:
+                print("No such book")
+        else:
+            print("No such user")
+
+
+
+
+    elif a==3:
+        l1=[]
+        l2=[]
+        q5=cur.execute("select cno,cname from customers;")
+        q6="""insert into customers(cno,cname,phone,email) values(?,?,?,?);"""
+        for i in q5:
+            l1.append(i[0])
+            l2.append(i[1])
+        dct1={l1[i]:l2[i] for i in range(len(l1))}
+        cno=int(input("Enter the id of a person:-"))
+        cname=''
+        if cno in dct1:
+            print("USER ALREADY EXISTS")
+        else:
+            cname=input("Enter the name of the person:-")
+            phone=int(input("Enter the phone number of new user:-"))
+            email=input("Enter new user email:-")
+            datatuple=(cno,cname,phone,email)
+            cur.execute(q6,datatuple)
+            con.commit()
+
+            
+    elif a==4:
+        l3=[]
+        l4=[]
+        q7=cur.execute("select bcode,bname from stock;")
+        q8="""insert into stock(bcode,bname,tb,ab) values(?,?,?,?);"""
+        for i in q5:
+            l3.append(i[0])
+            l4.append(i[1])
+        dct2={l3[i]:l4[i] for i in range(len(l3))}
+        bcode=int(input("Enter the code of book:-"))
+        cname=''
+        if bcode in dct2:
+            print("BOOK ALREADY EXISTS")
+        else:
+            bname=input("Enter the name of Book:-")
+            tb=int(input("Enter the total number of books:-"))
+            ab=tb
+            datatuple=(bcode,bname,tb,ab)
+            cur.execute(q8,datatuple)
+            con.commit()
+            
+            
+    elif a==5:
+        q7=cur.execute("select * from stock;")
+        rows=cur.fetchall()
+        for r in range(31):
+            print("-",end="")
+        print()
+        print("{:<1}{:<4}{:<1}{:<10}{:<1}{:<6}{:<1}{:<6}{:<1}".format( "|","CODE","|","BOOKNAME","|","T_BOOK","|","A_BOOK","|"))
+        for r in range(31):
+            print("-",end="")
+        print()
+        for row in rows:
+            print("{:<1}{:>4}{:<1}{:<10}{:<1}{:<6}{:<1}{:<6}{:<1}".format( "|",row[0],"|",row[1],"|",row[2],"|",row[3],"|"))
+        for r in range(31):
+            print("-",end="")
+        print()
+        con.commit()
+
+    elif a==6:
+        q7=cur.execute("select * from customers;")
+        rows=cur.fetchall()
+        for r in range(50):
+            print("-",end="")
+        print()
+        print("{:<1}{:<3}{:<1}{:<10}{:<1}{:<11}{:<1}{:<21}{:<1}".format( "|","ID","|","NAME","|","PHONE","|","EMAIL","|"))
+        for r in range(50):
+            print("-",end="")
+        print()
+        for row in rows:
+            print("{:<1}{:>3}{:<1}{:<10}{:<1}{:<11}{:<1}{:<21}{:<1}".format( "|",row[0],"|",row[1],"|",row[2],"|",row[3],"|"))
+        for r in range(50):
+            print("-",end="")
+        print()
+        con.commit()
+
+    elif a==7:
+        q7=cur.execute("select * from MAINTAIN;")
+        rows=cur.fetchall()
+        for r in range(31):
+            print("-",end="")
+        print()
+        print("{:<1}{:<3}{:<1}{:<4}{:<1}{:<10}{:<1}{:<10}{:<1}{:<10}{:<1}{:<10}{:<1}{:<4}{:<1}".format( "|","ID","|","CODE","|","NAME","|","ISSUEDATE","|","E_R_DATE","|","RETURN DATE","|","FINE","|"))
+        for r in range(31):
+            print("-",end="")
+        print()
+        for row in rows:
+            print("{:<1}{:<3}{:<1}{:<4}{:<1}{:<10}{:<1}{:<10}{:<1}{:<10}{:<1}{:<10}{:<1}{:<4}{:<1}".format( "|",row[0],"|",row[1],"|",row[2],"|",str(row[3]),"|",str(row[4]),"|",str(row[5]),"|",str(row[6]),"|"))
+        for r in range(31):
+            print("-",end="")
+        print()
+        con.commit()
+
+        
+
+
+    else:
+        print("WRONG CHOICE")
+        con.commit()
+        cur.close()
+except sqlite3.Error as error:
+    print("Error occurred is",error)
+finally:
+    if(con):
+        con.close()
+        print("connection closed")
